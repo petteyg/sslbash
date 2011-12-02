@@ -1,0 +1,49 @@
+#!/bin/bash
+
+
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+if [[ "${1}" == "" || "${2}" == "" ]]; then
+	echo "Usage: ${0} <domain> <CA>"
+	exit
+fi
+
+DOMAIN=""
+TD=${1}
+TLD=${1##*.}
+while [[ ! "${TD}" == "${TLD}" ]]; do
+	DOMAIN=${TD}
+	TD=${TD#*.}
+done
+
+CA=${2}
+if [[ ! -f ${CA}.crt ]]; then
+	case "${2}" in
+		ca.* ) CA=${2} ;;
+		* ) CA=ca.${2} ;;
+	esac
+fi
+if [[ ! -f ${CA}.crt ]]; then
+	echo "CA file (${2} or ${CA}) not found"
+	exit
+fi
+
+EXT=""
+if [[ -f ${DOMAIN}/${1}.cnf ]]; then
+	EXT="-extfile ${DOMAIN}/${1}.cnf"
+fi
+
+openssl x509 -CA ${CA}.crt -CAkey ${CA}.key -CAserial ${CA}.srl ${EXT} -req -in ${DOMAIN}/${1}.csr -out ${DOMAIN}/${1}.crt -days 365
+echo $(cat ${CA}.srl; echo ${1}) >> ${CA}.certs

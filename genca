@@ -1,0 +1,32 @@
+#!/bin/bash
+
+
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+if [[ ${1} == "" ]]; then
+	echo "Usage: ${0} domain"
+	exit
+fi
+CA=""
+case "${1}" in
+	ca.* ) CA=${1} ;;
+	* ) CA=ca.${1} ;;
+esac
+openssl req -new -newkey rsa:4096 -nodes -out ${CA}.csr -keyout ${CA}.key
+openssl x509 -trustout -signkey ${CA}.key -days 365 -req -in ${CA}.csr -out ${CA}.crt
+sed -i -e 's/TRUSTED //' ${CA}.crt
+echo "02" > ${CA}.srl
+rm ${CA}.csr
+openssl x509 -in ${CA}.crt -out ${CA}.der -outform DER

@@ -1,0 +1,48 @@
+#!/bin/bash
+
+
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+DOMAIN=""
+TD=${1}
+TLD=${1##*.}
+while [[ ! "${TD}" == "${TLD}" ]]; do
+	DOMAIN=${TD}
+	TD=${TD#*.}
+done
+
+if [[ "${1}" == "" || "${2}" == "" ]]; then
+	echo "Usage: ${0} <domain> <level>"
+	exit
+fi
+if [[ ! -f ${1}.key ]]; then
+	echo Private key not found
+	exit
+fi
+if [[ ! -f ${1}.crt ]]; then
+	echo Certificate not found
+	exit
+fi
+CA="${2}"
+echo Decrypting private key...
+openssl rsa -in ${DOMAIN}/${1}.key -out temp.key
+mv -f temp.key ${DOMAIN}.key
+echo Making combined certificate...
+echo Adding certificate...
+cat ${DOMAIN}/${1}.crt > ${DOMAIN}/${1}.pem
+echo Adding CA...
+cat ${CA} >> ${DOMAIN}/${1}.pem
+echo New combined certificate: ${DOMAIN}/${1}.pem
+
