@@ -16,17 +16,11 @@
 
 
 if [[ ${1} == "" ]]; then
-	echo "Usage: ${0} domain"
+	echo "Usage: ${0} <domain>"
 	exit
 fi
-CA=""
-case "${1}" in
-	ca.* ) CA=${1} ;;
-	* ) CA=ca.${1} ;;
-esac
-openssl req -new -newkey rsa:4096 -nodes -out ${CA}.csr -keyout ${CA}.key
-openssl x509 -trustout -signkey ${CA}.key -days 365 -req -in ${CA}.csr -out ${CA}.crt
-sed -i -e 's/TRUSTED //' ${CA}.crt
-echo "02" > ${CA}.srl
-rm ${CA}.csr
-openssl x509 -in ${CA}.crt -out ${CA}.der -outform DER
+if [[ ! -f ${1}.crt ]]; then
+	echo "Certificate doesn't exist"
+	exit
+fi
+openssl x509 -in ${1}.crt -out ${1}.der -outform DER
