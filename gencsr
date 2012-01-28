@@ -30,37 +30,5 @@ if [[ ! -d ${DOMAIN} ]]; then
 	mkdir ${DOMAIN}
 fi
 
-cat <<EOF > template
-[ req ]
-default_bits           = 4096
-default_keyfile        = ${DOMAIN}/${1}.key
-distinguished_name     = req_distinguished_name
-x509_extensions        = v3_ca
-
-dirstring_type = nobmp
-
-[ req_distinguished_name ]
-countryName			= Country Name (2 letter code)
-countryName_min			= 2
-countryName_max			= 2
-countryName_default		= US
-stateOrProvinceName		= State or Province Name (full name)
-stateOrProvinceName_default	= State Of Being
-localityName			= Locality Name (city, district)
-localityName_default		= Localized Inteference
-organizationName		= Organization Name (company)
-organizationName_default	= Organized Chaos
-organizationalUnitName		= Organizational Unit Name (department, division)
-organizationalUnitName_default	= Chaotic Organizers
-
-[ v3_ca ]
-subjectKeyIdentifier=hash
-authorityKeyIdentifier=keyid:always,issuer:always
-basicConstraints = CA:true
-EOF
-
-openssl req -new -newkey rsa:4096 -nodes -out ${DOMAIN}/${1}.csr -keyout ${DOMAIN}/${1}.key -config template
-rm template
-DN=$(openssl req  -in ${DOMAIN}/${1}.csr -key ${DOMAIN}/${1}.key -noout -subject)
-subject=${DN#*=}
-openssl req -in ${DOMAIN}/${1}.csr -key ${DOMAIN}/${1}.key -subj "/CN=${1}${subject}" -out ${DOMAIN}/${1}.csr
+SUBJECT="/CN=${1}/C=US/ST=Mississippi/L=Hattiesburg/O=Foldspace/OU=Foldspace"
+openssl req -newkey rsa:4096 -nodes -keyout ${DOMAIN}/${1}.key -new -subj ${SUBJECT} -out ${DOMAIN}/${1}.csr
